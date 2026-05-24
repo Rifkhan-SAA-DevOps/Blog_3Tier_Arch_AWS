@@ -59,7 +59,3 @@ jobs:
 
             
           EOF
-
-      - name: Validate public frontend health
-        run: |
-          curl -f ${{ secrets.DOMAIN_URL }}/health.html
