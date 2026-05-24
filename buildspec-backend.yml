@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Preparing backend package..."
+
+  build:
+    commands:
+      - echo "Packaging backend files..."
+      - mkdir -p artifact/backend
+      - cp -r server/package.json artifact/backend/
+      - cp -r server/package-lock.json artifact/backend/ || true
+      - cp -r server/src artifact/backend/src
+      - cp deploy/backend/appspec.yml artifact/appspec.yml
+      - cp -r deploy/backend/scripts artifact/scripts
+
+artifacts:
+  base-directory: artifact
+  files:
+    - "**/*"
