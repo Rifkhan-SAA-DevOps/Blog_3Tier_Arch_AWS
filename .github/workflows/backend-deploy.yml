@@ -1,0 +1,89 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+      - aws-3tier-manual
+    paths:
+      - "server/**"
+      - ".github/workflows/backend-deploy.yml"
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan -H ${{ secrets.FRONTEND_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload backend files to frontend jump host
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} \
+            "rm -rf /tmp/blog-backend-upload && mkdir -p /tmp/blog-backend-upload"
+
+          scp -i ~/.ssh/deploy_key -r server/* \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/blog-backend-upload/
+
+      - name: Copy backend files from jump host to private backend EC2
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << EOF
+              set -e
+
+              mkdir -p ~/.ssh
+              cat > ~/.ssh/deploy_key << 'KEY'
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          KEY
+              chmod 600 ~/.ssh/deploy_key
+
+              ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
+
+              ssh -i ~/.ssh/deploy_key \
+                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
+                "mkdir -p /tmp/blog-backend-upload"
+
+              scp -i ~/.ssh/deploy_key -r /tmp/blog-backend-upload/* \
+                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/blog-backend-upload/
+          EOF
+
+      - name: Deploy backend on private EC2
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << EOF
+              set -e
+
+              ssh -i ~/.ssh/deploy_key \
+                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << 'BACKEND'
+                  set -e
+
+                  sudo mkdir -p /var/www/blog-backend
+                  sudo rsync -av --delete /tmp/blog-backend-upload/ /var/www/blog-backend/
+                  sudo chown -R ec2-user:ec2-user /var/www/blog-backend
+
+                  cp /home/ec2-user/blog-backend.env /var/www/blog-backend/.env
+
+                  cd /var/www/blog-backend
+
+                  npm install --omit=dev
+
+                  pm2 restart blog-backend || pm2 start npm --name blog-backend -- start
+
+                  pm2 save
+
+                  curl -f http://localhost:5000/api/health
+          BACKEND
+          EOF
+
+      - name: Validate backend through frontend reverse proxy
+        run: |
+          curl -f ${{ secrets.DOMAIN_URL }}/api/health
