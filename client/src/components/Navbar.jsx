@@ -11,7 +11,7 @@ export default function Navbar() {
         <span className="brand-icon">
           <BookOpen size={20} />
         </span>
-        ModernBlog
+        Rifkhan Blog
       </Link>
 
       <nav className="nav-links">
@@ -34,7 +34,9 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link className="ghost-btn" to="/login">Login</Link>
+            <Link className="ghost-btn" to="/login">
+              Login
+            </Link>
             <Link className="primary-btn small" to="/register">
               <PenSquare size={16} /> Join
             </Link>
