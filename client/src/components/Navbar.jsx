@@ -11,7 +11,7 @@ export default function Navbar() {
         <span className="brand-icon">
           <BookOpen size={20} />
         </span>
-        Rifkhan Blog ....
+        Rifkhan Blog
       </Link>
 
       <nav className="nav-links">
