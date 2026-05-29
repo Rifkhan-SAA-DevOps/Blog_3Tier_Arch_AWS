@@ -33,7 +33,7 @@ This same project is planned to be extended into:
 ![Diagram](docs/images/3tier_arc.png)
 
 ```mermaid
-
+flowchart TD
     User[User Browser] --> Route53[Route 53 Domain]
     Route53 --> ACM[ACM SSL Certificate]
     ACM --> PublicALB[Public Frontend ALB - HTTPS]
@@ -159,18 +159,18 @@ Private RDS MySQL Database
 
 ---
 
-| Layer                                                                               | AWS Resource                                                  |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Networking                                                                          | VPC, public subnets, private app subnets, private DB subnets  |
-| Internet Access                                                                     | Internet Gateway, NAT Gateway                                 |
-| Frontend                                                                            | Public ALB, frontend target group, frontend ASG, frontend EC2 |
-| Backend                                                                             | Internal ALB, backend target group, backend ASG, backend EC2  |
-| Database                                                                            | Amazon RDS MySQL                                              |
-| Domain                                                                              | Route 53                                                      |
-| SSL                                                                                 | ACM certificate                                               |
-| Security                                                                            | Security groups, private database access                      |
-| CI/CD                                                                               | GitHub Actions with SSH deployment                            |
-| ----------------------------------------------------------------------------------- |
+| Layer           | AWS Resource                                                  |
+| --------------- | ------------------------------------------------------------- |
+| Networking      | VPC, public subnets, private app subnets, private DB subnets  |
+| Internet Access | Internet Gateway, NAT Gateway                                 |
+| Frontend        | Public ALB, frontend target group, frontend ASG, frontend EC2 |
+| Backend         | Internal ALB, backend target group, backend ASG, backend EC2  |
+| Database        | Amazon RDS MySQL                                              |
+| Domain          | Route 53                                                      |
+| SSL             | ACM certificate                                               |
+| Security        | Security groups, private database access                      |
+| CI/CD           | GitHub Actions with SSH deployment                            |
+|                 |
 
 ---
 
@@ -325,32 +325,6 @@ This project includes production-level scalability components:
 - PM2 for backend process management
 
 ---
-
-## Screenshots / Proof
-
-Create this folder in the repository:
-
-```text
-docs/images/
-```
-
-Add screenshots with these names:
-
-```text
-docs/images/live-app-home.png
-docs/images/login-page.png
-docs/images/route53-domain.png
-docs/images/acm-certificate.png
-docs/images/frontend-alb.png
-docs/images/backend-internal-alb.png
-docs/images/frontend-asg.png
-docs/images/backend-asg.png
-docs/images/rds-mysql.png
-docs/images/github-actions-frontend-success.png
-docs/images/github-actions-backend-success.png
-docs/images/pm2-backend.png
-docs/images/nginx-config.png
-```
 
 ### Live Application
 
@@ -537,6 +511,8 @@ This project will be improved further with:
 
 The next version of this same application will be containerized using Docker.
 
+**Branch URL:** https://github.com/Rifkhan-SAA-DevOps/dockerized-ecommerce-aws-devops
+
 Planned architecture:
 
 ```text
@@ -571,6 +547,8 @@ Planned tools:
 
 A serverless version of this project is also planned.
 
+**Branch URL:** https://github.com/Rifkhan-SAA-DevOps/serverless-3tier-artch
+
 Planned architecture:
 
 ```text
@@ -599,6 +577,12 @@ Planned AWS services:
 - GitHub Actions CI/CD
 
 ---
+
+## Upcoming Version 3: Terraform Infrastructure as Code Deployment
+
+Terraform Infrastructure as Code version of this project is also planned.
+
+**Branch URL:** https://github.com/Rifkhan-SAA-DevOps/terraform-for-blog-app
 
 ## What I Learned
 
