@@ -393,10 +393,10 @@ This project includes production-level scalability components:
 
 ### GitHub Actions Frontend Deployment
 
-![Frontend CI/CD](docs/images/frontend-cicd-1.png.png)
-![Frontend CI/CD](docs/images/frontend-cicd-2.png.png)
-![Frontend CI/CD](docs/images/frontend-cicd-3.png.png)
-![Frontend CI/CD](docs/images/frontend-cicd-4.png.png)
+![Frontend CI/CD](docs/images/frontend-cicd-1.png)
+![Frontend CI/CD](docs/images/frontend-cicd-2.png)
+![Frontend CI/CD](docs/images/frontend-cicd-3.png)
+![Frontend CI/CD](docs/images/frontend-cicd-4.png)
 
 ### GitHub Actions Backend Deployment
 
