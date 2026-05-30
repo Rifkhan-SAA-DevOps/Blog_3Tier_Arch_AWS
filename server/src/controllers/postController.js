@@ -79,7 +79,7 @@ export async function getPosts(req, res) {
     params
   );
 
-  return success(res, "Posts fetched", {
+  return success(res, "Posts fetched Now!", {
     posts,
     pagination: {
       total: countResult.total,

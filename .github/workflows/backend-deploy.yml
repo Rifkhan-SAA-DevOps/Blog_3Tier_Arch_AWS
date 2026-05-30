@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - aws-3tier-manual
     paths:
       - "server/**"
       - ".github/workflows/backend-deploy.yml"
