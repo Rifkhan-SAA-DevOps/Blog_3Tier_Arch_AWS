@@ -19,7 +19,7 @@ jobs:
       - name: Configure SSH key on GitHub runner
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
           ssh-keyscan -H ${{ secrets.FRONTEND_HOST }} >> ~/.ssh/known_hosts
@@ -27,73 +27,84 @@ jobs:
       - name: Upload backend files to frontend jump host
         run: |
           ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} \
             "rm -rf /tmp/backend-upload && mkdir -p /tmp/backend-upload"
 
-          scp -i ~/.ssh/deploy_key -r server/* \
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -r server/. \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/backend-upload/
 
       - name: Copy backend files from jump host to private backend EC2
         run: |
           ssh -i ~/.ssh/deploy_key \
-            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << EOF
-            set -e
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << 'EOF'
+          set -e
 
-            mkdir -p ~/.ssh
+          mkdir -p ~/.ssh
+          printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
-            printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
+          echo "Files on frontend jump host:"
+          ls -la /tmp/backend-upload
 
-            chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
 
-            ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
+            "rm -rf /tmp/backend-upload && mkdir -p /tmp/backend-upload"
 
-            ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
-              "rm -rf /tmp/backend-upload && mkdir -p /tmp/backend-upload"
-
-            scp -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              -r /tmp/backend-upload/* \
-              ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -r /tmp/backend-upload/. \
+            ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/
           EOF
 
       - name: Deploy backend on private EC2
         run: |
           ssh -i ~/.ssh/deploy_key \
-            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << EOF
-            set -e
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << 'EOF'
+          set -e
 
-            ssh -i ~/.ssh/deploy_key \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << BACKEND
-              set -e
+          mkdir -p ~/.ssh
+          printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
 
-              sudo mkdir -p /var/www/backend
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << 'BACKEND'
+          set -e
 
-              if ! command -v rsync >/dev/null 2>&1; then
-                sudo dnf install -y rsync || sudo yum install -y rsync
-              fi
+          sudo mkdir -p /var/www/backend
 
-              sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
-              sudo chown -R ec2-user:ec2-user /var/www/backend
+          if ! command -v rsync >/dev/null 2>&1; then
+            sudo dnf install -y rsync || sudo yum install -y rsync
+          fi
 
-              if [ -f /home/ec2-user/env ]; then
-                cp /home/ec2-user/env /var/www/backend/.env
-              else
-                echo "ERROR: /home/ec2-user/backend.env not found"
-                exit 1
-              fi
+          sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
+          sudo chown -R ec2-user:ec2-user /var/www/backend
 
-              cd /var/www/backend
+          if [ -f /home/ec2-user/.env ]; then
+            cp /home/ec2-user/.env /var/www/backend/.env
+          else
+            echo "ERROR: /home/ec2-user/.env not found"
+            echo "Create it on backend EC2 using: nano /home/ec2-user/.env"
+            exit 1
+          fi
 
-              npm install --omit=dev
+          cd /var/www/backend
 
-              pm2 restart backend || pm2 start npm --name backend -- start
+          npm install --omit=dev
 
-              pm2 save
+          pm2 restart backend || pm2 start npm --name backend -- start
 
-              curl -f http://localhost:5000/api/health
+          pm2 save
+
+          curl -f http://localhost:5000/api/health
           BACKEND
           EOF
 
