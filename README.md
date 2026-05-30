@@ -355,6 +355,14 @@ This project includes production-level scalability components:
 
 ![Backend Internal ALB](docs/images/backend-internal-alb.png)
 
+### Backend Internal TargetGroup
+
+![Backend Internal ALB](docs/images/backend-internal-alb-tg.png)
+
+### Backend Internal ALB Security Group
+
+![Backend Internal ALB](docs/images/backend-internal-alb-sg.png)
+
 ### Frontend Auto Scaling Group
 
 ![Frontend ASG](docs/images/frontend-asg.png)
