@@ -30,7 +30,7 @@ This same project is planned to be extended into:
 
 ## Architecture Diagram
 
-![Diagram](docs/images/3tier_arc.png)
+![AWS-3Tier-CI/CD-autoscaling](docs/images/aws-3tier-cicd-autoscaling.png)
 
 ```mermaid
 flowchart TD
@@ -326,13 +326,13 @@ This project includes production-level scalability components:
 
 ---
 
-### Live Application
+<!-- ### Live Application -->
 
-![Live App](docs/images/live-app-home.png)
+<!-- ![Live App](docs/images/live-app-home.png) -->
 
-### Login Page
+<!-- ### Login Page -->
 
-![Login Page](docs/images/login-page.png)
+<!-- ![Login Page](docs/images/login-page.png) -->
 
 ### Route 53 Domain
 
@@ -345,6 +345,11 @@ This project includes production-level scalability components:
 ### Frontend Public ALB
 
 ![Frontend ALB](docs/images/frontend-alb.png)
+![Frontend ALB](docs/images/frontend-alb-1.png)
+
+### Frontend Public ALB Security Group
+
+![Frontend ALB](docs/images/frontend-alb-sg.png)
 
 ### Backend Internal ALB
 
@@ -354,13 +359,29 @@ This project includes production-level scalability components:
 
 ![Frontend ASG](docs/images/frontend-asg.png)
 
+### Frontend Auto Scaling Group EC2 Secuity Group
+
+![Frontend ASG](docs/images/frontend-asg-sg.png)
+
 ### Backend Auto Scaling Group
 
 ![Backend ASG](docs/images/backend-asg.png)
 
+### Backend Auto Scaling Group EC2 Security Group
+
+![Backend ASG](docs/images/backend-asg-sg.png)
+
 ### RDS MySQL
 
 ![RDS MySQL](docs/images/rds-mysql.png)
+
+### RDS MySQL SubnetGroup
+
+![RDS MySQL](docs/images/rds-mysql-sbg.png)
+
+### RDS MySQL Security Group
+
+![RDS MySQL](docs/images/rds-mysql-sg.png)
 
 ### GitHub Actions Frontend Deployment
 
@@ -627,5 +648,3 @@ The backend connects securely to the private RDS MySQL database.
 
 AWS Certified Solutions Architect Associate  
 Fullstack Developer | Cloud & DevOps Learner
-
-This project is part of my cloud and DevOps portfolio to demonstrate practical AWS deployment, CI/CD automation, and production-style architecture skills.
