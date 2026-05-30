@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure SSH key
+      - name: Configure SSH key on GitHub runner
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
@@ -37,49 +37,65 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << EOF
-              set -e
+            set -e
 
-              mkdir -p ~/.ssh
-              cat > ~/.ssh/deploy_key << 'KEY'
-          ${{ secrets.SSH_PRIVATE_KEY }}
-          KEY
-              chmod 600 ~/.ssh/deploy_key
+            mkdir -p ~/.ssh
 
-              ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
+            cat > ~/.ssh/deploy_key << 'KEY'
+            ${{ secrets.SSH_PRIVATE_KEY }}
+            KEY
 
-              ssh -i ~/.ssh/deploy_key \
-                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
-                "mkdir -p /tmp/backend-upload"
+            chmod 600 ~/.ssh/deploy_key
 
-              scp -i ~/.ssh/deploy_key -r /tmp/backend-upload/* \
-                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/
+            ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
+
+            ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
+              "rm -rf /tmp/backend-upload && mkdir -p /tmp/backend-upload"
+
+            scp -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -r /tmp/backend-upload/* \
+              ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/
           EOF
 
       - name: Deploy backend on private EC2
         run: |
           ssh -i ~/.ssh/deploy_key \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << EOF
+            set -e
+
+            ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << BACKEND
               set -e
 
-              ssh -i ~/.ssh/deploy_key \
-                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << 'BACKEND'
-                  set -e
+              sudo mkdir -p /var/www/backend
 
-                  sudo mkdir -p /var/www/backend
-                  sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
-                  sudo chown -R ec2-user:ec2-user /var/www/backend
+              if ! command -v rsync >/dev/null 2>&1; then
+                sudo dnf install -y rsync || sudo yum install -y rsync
+              fi
 
-                  cp /home/ec2-user/backend.env /var/www/backend/.env
+              sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
+              sudo chown -R ec2-user:ec2-user /var/www/backend
 
-                  cd /var/www/backend
+              if [ -f /home/ec2-user/backend.env ]; then
+                cp /home/ec2-user/backend.env /var/www/backend/.env
+              else
+                echo "ERROR: /home/ec2-user/backend.env not found"
+                exit 1
+              fi
 
-                  npm install --omit=dev
+              cd /var/www/backend
 
-                  pm2 restart backend || pm2 start npm --name backend -- start
+              npm install --omit=dev
 
-                  pm2 save
+              pm2 restart backend || pm2 start npm --name backend -- start
 
-                  curl -f http://localhost:5000/api/health
+              pm2 save
+
+              curl -f http://localhost:5000/api/health
           BACKEND
           EOF
 
