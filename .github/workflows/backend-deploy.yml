@@ -21,9 +21,6 @@ jobs:
           echo "Current directory:"
           pwd
 
-          echo "Repository files:"
-          ls -la
-
           echo "Checking server folder:"
           ls -la server
 
@@ -38,12 +35,13 @@ jobs:
 
           ssh-keyscan -H ${{ secrets.FRONTEND_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Upload backend files to frontend jump host
+      - name: Create backend package archive
         run: |
-          echo "Checking backend files before upload:"
-          ls -la server
-          ls -la server/package.json
+          tar -czf backend.tar.gz -C server .
+          ls -lh backend.tar.gz
 
+      - name: Upload backend archive to frontend jump host
+        run: |
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} \
@@ -51,15 +49,15 @@ jobs:
 
           scp -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
-            -r ./server/. \
-            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/backend-upload/
+            backend.tar.gz \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/backend-upload/backend.tar.gz
 
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} \
-            "echo 'Files on frontend jump host:' && ls -la /tmp/backend-upload && ls -la /tmp/backend-upload/package.json"
+            "echo 'Files on frontend jump host:' && ls -lh /tmp/backend-upload"
 
-      - name: Copy backend files from jump host to private backend EC2
+      - name: Copy backend archive from jump host to private backend EC2
         run: |
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
@@ -70,10 +68,6 @@ jobs:
           printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          echo "Files on frontend before copying to backend:"
-          ls -la /tmp/backend-upload
-          ls -la /tmp/backend-upload/package.json
-
           ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
 
           ssh -i ~/.ssh/deploy_key \
@@ -83,13 +77,13 @@ jobs:
 
           scp -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
-            -r /tmp/backend-upload/. \
-            ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/
+            /tmp/backend-upload/backend.tar.gz \
+            ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/backend.tar.gz
 
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
-            "echo 'Files on backend after copy:' && ls -la /tmp/backend-upload && ls -la /tmp/backend-upload/package.json"
+            "echo 'Files on backend after copy:' && ls -lh /tmp/backend-upload/backend.tar.gz"
           EOF
 
       - name: Deploy backend on private EC2
@@ -110,18 +104,20 @@ jobs:
 
           echo "Deploying backend on private EC2..."
 
-          echo "Checking uploaded backend files:"
-          ls -la /tmp/backend-upload
-          ls -la /tmp/backend-upload/package.json
+          echo "Checking backend archive:"
+          ls -lh /tmp/backend-upload/backend.tar.gz
 
+          sudo rm -rf /var/www/backend
           sudo mkdir -p /var/www/backend
-
-          if ! command -v rsync >/dev/null 2>&1; then
-            sudo dnf install -y rsync || sudo yum install -y rsync
-          fi
-
-          sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
           sudo chown -R ec2-user:ec2-user /var/www/backend
+
+          tar -xzf /tmp/backend-upload/backend.tar.gz -C /var/www/backend
+
+          cd /var/www/backend
+
+          echo "Checking extracted backend files:"
+          ls -la
+          ls -la package.json
 
           if [ -f /home/ec2-user/.env ]; then
             cp /home/ec2-user/.env /var/www/backend/.env
@@ -130,12 +126,6 @@ jobs:
             echo "Create it on backend EC2 using: nano /home/ec2-user/.env"
             exit 1
           fi
-
-          cd /var/www/backend
-
-          echo "Checking deployment folder:"
-          ls -la
-          ls -la package.json
 
           npm install --omit=dev
 
