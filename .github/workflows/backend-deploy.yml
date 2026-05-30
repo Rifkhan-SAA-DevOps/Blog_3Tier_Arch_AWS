@@ -41,9 +41,7 @@ jobs:
 
             mkdir -p ~/.ssh
 
-            cat > ~/.ssh/deploy_key << 'KEY'
-            ${{ secrets.SSH_PRIVATE_KEY }}
-            KEY
+            printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
 
             chmod 600 ~/.ssh/deploy_key
 
