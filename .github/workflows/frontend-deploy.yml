@@ -1,0 +1,61 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - aws-3tier-manual
+    paths:
+      - "client/**"
+      - ".github/workflows/frontend-deploy.yml"
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Build React frontend
+        working-directory: client
+        run: npm run build
+        env:
+          VITE_API_URL: /api
+
+      - name: Configure SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.FRONTEND_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload frontend build to EC2 temp folder
+        run: |
+          scp -i ~/.ssh/deploy_key -r client/dist/* \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/blog-frontend-build/
+
+      - name: Deploy frontend build to Nginx folder
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << 'EOF'
+              set -e
+
+              sudo mkdir -p /usr/share/nginx/html
+              sudo rm -rf /usr/share/nginx/html/*
+              sudo cp -r /tmp/blog-frontend-build/* /usr/share/nginx/html/
+
+              sudo nginx -t
+              sudo systemctl reload nginx
+
+            
+          EOF
