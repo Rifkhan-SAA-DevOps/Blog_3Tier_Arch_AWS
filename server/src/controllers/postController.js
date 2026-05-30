@@ -5,8 +5,14 @@ import { success, fail } from "../utils/apiResponse.js";
 
 export const postRules = [
   body("title").trim().isLength({ min: 5 }).withMessage("Title is too short"),
-  body("excerpt").trim().isLength({ min: 10 }).withMessage("Excerpt is required"),
-  body("content").trim().isLength({ min: 50 }).withMessage("Content is too short"),
+  body("excerpt")
+    .trim()
+    .isLength({ min: 10 })
+    .withMessage("Excerpt is required"),
+  body("content")
+    .trim()
+    .isLength({ min: 50 })
+    .withMessage("Content is too short"),
   body("category_id").isInt().withMessage("Category is required"),
   body("status").isIn(["draft", "published"]).withMessage("Invalid status"),
 ];
@@ -68,7 +74,7 @@ export async function getPosts(req, res) {
      GROUP BY p.id
      ORDER BY p.created_at DESC
      LIMIT ? OFFSET ?`,
-    [...params, Number(limit), offset]
+    [...params, Number(limit), offset],
   );
 
   const [[countResult]] = await pool.query(
@@ -76,10 +82,10 @@ export async function getPosts(req, res) {
      FROM posts p
      JOIN categories c ON c.id = p.category_id
      ${where}`,
-    params
+    params,
   );
 
-  return success(res, "Posts fetched Now!", {
+  return success(res, "Posts fetched", {
     posts,
     pagination: {
       total: countResult.total,
@@ -103,7 +109,7 @@ export async function getPostById(req, res) {
      JOIN categories c ON c.id = p.category_id
      JOIN users u ON u.id = p.author_id
      WHERE p.id = ? OR p.slug = ?`,
-    [id, id]
+    [id, id],
   );
 
   if (!posts.length) {
@@ -114,7 +120,8 @@ export async function getPostById(req, res) {
 }
 
 export async function createPost(req, res) {
-  const { title, excerpt, content, category_id, cover_image, status } = req.body;
+  const { title, excerpt, content, category_id, cover_image, status } =
+    req.body;
 
   const slug = createSlug(title);
 
@@ -131,7 +138,7 @@ export async function createPost(req, res) {
       category_id,
       req.user.id,
       status,
-    ]
+    ],
   );
 
   return success(
@@ -141,13 +148,14 @@ export async function createPost(req, res) {
       id: result.insertId,
       slug,
     },
-    201
+    201,
   );
 }
 
 export async function updatePost(req, res) {
   const { id } = req.params;
-  const { title, excerpt, content, category_id, cover_image, status } = req.body;
+  const { title, excerpt, content, category_id, cover_image, status } =
+    req.body;
 
   const [posts] = await pool.query("SELECT * FROM posts WHERE id = ?", [id]);
 
@@ -165,7 +173,7 @@ export async function updatePost(req, res) {
     `UPDATE posts 
      SET title = ?, excerpt = ?, content = ?, category_id = ?, cover_image = ?, status = ?
      WHERE id = ?`,
-    [title, excerpt, content, category_id, cover_image || "", status, id]
+    [title, excerpt, content, category_id, cover_image || "", status, id],
   );
 
   return success(res, "Post updated");
