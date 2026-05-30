@@ -28,10 +28,10 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key \
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} \
-            "rm -rf /tmp/blog-backend-upload && mkdir -p /tmp/blog-backend-upload"
+            "rm -rf /tmp/backend-upload && mkdir -p /tmp/backend-upload"
 
           scp -i ~/.ssh/deploy_key -r server/* \
-            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/blog-backend-upload/
+            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }}:/tmp/backend-upload/
 
       - name: Copy backend files from jump host to private backend EC2
         run: |
@@ -49,10 +49,10 @@ jobs:
 
               ssh -i ~/.ssh/deploy_key \
                 ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
-                "mkdir -p /tmp/blog-backend-upload"
+                "mkdir -p /tmp/backend-upload"
 
-              scp -i ~/.ssh/deploy_key -r /tmp/blog-backend-upload/* \
-                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/blog-backend-upload/
+              scp -i ~/.ssh/deploy_key -r /tmp/backend-upload/* \
+                ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }}:/tmp/backend-upload/
           EOF
 
       - name: Deploy backend on private EC2
@@ -65,17 +65,17 @@ jobs:
                 ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << 'BACKEND'
                   set -e
 
-                  sudo mkdir -p /var/www/blog-backend
-                  sudo rsync -av --delete /tmp/blog-backend-upload/ /var/www/blog-backend/
-                  sudo chown -R ec2-user:ec2-user /var/www/blog-backend
+                  sudo mkdir -p /var/www/backend
+                  sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
+                  sudo chown -R ec2-user:ec2-user /var/www/backend
 
-                  cp /home/ec2-user/blog-backend.env /var/www/blog-backend/.env
+                  cp /home/ec2-user/backend.env /var/www/backend/.env
 
-                  cd /var/www/blog-backend
+                  cd /var/www/backend
 
                   npm install --omit=dev
 
-                  pm2 restart blog-backend || pm2 start npm --name blog-backend -- start
+                  pm2 restart backend || pm2 start npm --name backend -- start
 
                   pm2 save
 
