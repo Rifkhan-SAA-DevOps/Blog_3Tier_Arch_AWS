@@ -57,7 +57,7 @@ jobs:
             ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} \
             "echo 'Files on frontend jump host:' && ls -lh /tmp/backend-upload"
 
-      - name: Copy backend archive from jump host to private backend EC2
+      - name: Copy archive and deploy backend on private EC2
         run: |
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
@@ -68,47 +68,34 @@ jobs:
           printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          echo "Checking archive on frontend jump host:"
+          echo "1. Checking archive on frontend jump host:"
           ls -lh /tmp/backend-upload/backend.tar.gz
 
           ssh-keyscan -H ${{ secrets.BACKEND_PRIVATE_HOST }} >> ~/.ssh/known_hosts
 
+          echo "2. Preparing backend upload folder on private EC2:"
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
             "rm -rf /tmp/backend-upload && mkdir -p /tmp/backend-upload"
 
-          echo "Copying archive from frontend jump host to private backend EC2..."
-
+          echo "3. Copying archive to private backend EC2:"
           cat /tmp/backend-upload/backend.tar.gz | ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
             "cat > /tmp/backend-upload/backend.tar.gz"
 
-          echo "Checking archive on private backend EC2:"
+          echo "4. Confirming archive exists on private backend EC2:"
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} \
             "ls -lh /tmp/backend-upload/backend.tar.gz"
-          EOF
 
-      - name: Deploy backend on private EC2
-        run: |
-          ssh -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            ${{ secrets.FRONTEND_USER }}@${{ secrets.FRONTEND_HOST }} << 'EOF'
-          set -e
-
-          mkdir -p ~/.ssh
-          printf '%s\n' '${{ secrets.SSH_PRIVATE_KEY }}' > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
+          echo "5. Deploying backend:"
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             ${{ secrets.BACKEND_USER }}@${{ secrets.BACKEND_PRIVATE_HOST }} << 'BACKEND'
           set -e
-
-          echo "Deploying backend on private EC2..."
 
           echo "Checking backend archive:"
           ls -lh /tmp/backend-upload/backend.tar.gz
