@@ -78,7 +78,7 @@ jobs:
               sudo rsync -av --delete /tmp/backend-upload/ /var/www/backend/
               sudo chown -R ec2-user:ec2-user /var/www/backend
 
-              if [ -f /home/ec2-user/backend.env ]; then
+              if [ -f /home/ec2-user/env ]; then
                 cp /home/ec2-user/env /var/www/backend/.env
               else
                 echo "ERROR: /home/ec2-user/backend.env not found"
