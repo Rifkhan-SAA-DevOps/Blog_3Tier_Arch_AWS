@@ -326,23 +326,30 @@ This project includes production-level scalability components:
 
 ---
 
-<!-- ### Live Application -->
+## Live Application
 
-<!-- ![Live App](docs/images/live-app-home.png) -->
+![Live App](docs/images/live-app-home.png)
+![Live App](docs/images/live-app-home-1.png)
 
-<!-- ### Login Page -->
+## Register Page
 
-<!-- ![Login Page](docs/images/login-page.png) -->
+![Login Page](docs/images/register-page.png)
 
-### Route 53 Domain
+## Inside Pages
+
+![Login Page](docs/images/dashboard.png)
+![Login Page](docs/images/create_new_category-1.png)
+![Login Page](docs/images/create_new_category-2.png)
+
+## Route 53 Domain
 
 ![Route 53](docs/images/route53-domain.png)
 
-### ACM SSL Certificate
+## ACM SSL Certificate
 
 ![ACM Certificate](docs/images/acm-certificate.png)
 
-### Frontend Public ALB
+## Frontend Public ALB
 
 ![Frontend ALB](docs/images/frontend-alb.png)
 ![Frontend ALB](docs/images/frontend-alb-1.png)
@@ -351,37 +358,55 @@ This project includes production-level scalability components:
 
 ![Frontend ALB](docs/images/frontend-alb-sg.png)
 
-### Backend Internal ALB
+## Frontend & Backend AMI
 
-![Backend Internal ALB](docs/images/backend-internal-alb.png)
-
-### Backend Internal TargetGroup
-
-![Backend Internal ALB](docs/images/backend-internal-alb-tg.png)
-
-### Backend Internal ALB Security Group
-
-![Backend Internal ALB](docs/images/backend-internal-alb-sg.png)
-
-### Frontend Auto Scaling Group
-
-![Frontend ASG](docs/images/frontend-asg.png)
+![Frontend ASG](docs/images/AMIs-availabe.png)
 
 ### Frontend Auto Scaling Group EC2 Secuity Group
 
 ![Frontend ASG](docs/images/frontend-asg-sg.png)
 
-### Backend Auto Scaling Group
+### Frontend Launch Tamplate
 
-![Backend ASG](docs/images/backend-asg.png)
+![Frontend ASG](docs/images/frontend-lt.png)
+
+## Frontend Auto Scaling Group
+
+![Frontend ASG](docs/images/frontend-asg.png)
+![Frontend ASG](docs/images/web-asg-2.png)
+![Frontend ASG](docs/images/web-asg-3.png)
+
+## Backend Internal ALB
+
+![Backend Internal ALB](docs/images/backend-internal-alb.png)
+
+### Backend Internal ALB Security Group
+
+![Backend Internal ALB](docs/images/backend-internal-alb-sg.png)
 
 ### Backend Auto Scaling Group EC2 Security Group
 
 ![Backend ASG](docs/images/backend-asg-sg.png)
 
+### Backend Internal TargetGroup
+
+![Backend Internal ALB](docs/images/backend-internal-alb-tg.png)
+
+### Backend Internal Launch Tamplate
+
+![Backend Internal ALB](docs/images/backend-internal-lt.png)
+
+## Backend Auto Scaling Group
+
+![Backend ASG](docs/images/app-asg-1.png)
+![Backend ASG](docs/images/app-asg-2.png)
+![Backend ASG](docs/images/app-asg-3.png)
+
 ### RDS MySQL
 
 ![RDS MySQL](docs/images/rds-mysql.png)
+![RDS MySQL](docs/images/rds-mysql-sg.png)
+![RDS MySQL](docs/images/rds-mysql-sbg.png)
 
 ### RDS MySQL SubnetGroup
 
@@ -400,15 +425,20 @@ This project includes production-level scalability components:
 
 ### GitHub Actions Backend Deployment
 
-![Backend CI/CD](docs/images/github-actions-backend-success.png)
+![Backend CI/CD](docs/images/backend-cicd-1.png)
+![Backend CI/CD](docs/images/backend-cicd-2.png)
+![Backend CI/CD](docs/images/backend-cicd-3.png)
+![Backend CI/CD](docs/images/backend-cicd-4.png)
 
 ### PM2 Backend Process
 
-![PM2 Backend](docs/images/pm2-backend.png)
+![PM2 Backend](docs/images/pm2.png)
+![PM2 Backend](docs/images/pm2-1.png)
+![PM2 Backend](docs/images/pm2-2.png)
 
 ### Nginx Reverse Proxy Configuration
 
-![Nginx Config](docs/images/nginx-config.png)
+![Nginx Config](docs/images/nginx.png)
 
 ---
 
